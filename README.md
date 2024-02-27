@@ -1,24 +1,8 @@
-# myspace
+# Change Log
 
-## Project setup
-```
-npm install
-```
+## V1.0
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+The basic framework was built and the routing design was completed.
 
-### Compiles and minifies for production
-```
-npm run build
-```
+Specific includes: navigation bar components, user information page.
 
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

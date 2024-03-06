@@ -3,10 +3,10 @@
       <div class="row">
         <div class="col-3">
           <UserProfileInfo @follow="follow" @unfollow="unfollow" :user="user" />
-          <UserProfileWrite @post_a_post="post_a_post" />
+          <UserProfileWrite v-if="is_me" @post_a_post="post_a_post" />
         </div>
         <div class="col-9">
-          <UserProfilePosts :posts="posts" />
+          <UserProfilePosts :is_me="is_me" :posts="posts" @delete_a_post="delete_a_post" />
         </div>
       </div>
     </ContentBase>
@@ -17,7 +17,10 @@ import ContentBase from '@/components/ContentBase.vue';
 import UserProfileInfo from '@/components/UserProfileInfo.vue';
 import UserProfilePosts from '@/components/UserProfilePosts.vue';
 import UserProfileWrite from '@/components/UserProfileWrite.vue';
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
+import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
+import $ from 'jquery';
 
 export default {
     name: "UserProfileView",
@@ -29,63 +32,85 @@ export default {
     },
 
     setup: () => {
-      const user = reactive({
-        id: 1,
-        username: "huansongliu",
-        lastName: "liu",
-        firstName: "huansong",
-        followcount: 0,
-        is_followed: false,
+      const route = useRoute();
+      const store = useStore();
+
+      const userId = parseInt(route.params.userId);
+      const user = reactive({});
+
+      const posts = reactive({});
+
+      // 通过服务器更新user
+      $.ajax({
+        url: "https://app165.acapp.acwing.com.cn/myspace/getinfo/",
+        type: "GET",
+        data: {
+          user_id: userId,
+        },
+        headers: {
+          'Authorization': "Bearer " + store.state.user.access,
+        },
+        success(resp) {
+          user.id = resp.id;
+          user.username = resp.username;
+          user.photo = resp.photo;
+          user.followerCount = resp.followerCount;
+          user.is_followed = resp.is_followed;
+        }
       });
 
-      const posts = reactive({
-        count: 3,
-        posts: [
-          {
-            id: 1,
-            userId: 1,
-            content: "牢大"
-          },
-          {
-            id: 2,
-            userId: 1,
-            content: "我们想你啦"
-          },
-          {
-            id: 3,
-            userId: 1,
-            content: "孩子们我回来了"
-          },
-        ]
+      // 通过服务器更新posts
+      $.ajax({
+        url: "https://app165.acapp.acwing.com.cn/myspace/post/",
+        type: "GET",
+        data: {
+          user_id: userId,
+        },
+        headers: {
+          'Authorization': "Bearer " + store.state.user.access,
+        },
+        success(resp) {
+          posts.count = resp.length;  // 获得帖子列表里的元素个数
+          posts.posts = resp;
+        }
       });
 
       const follow = () => {
         if (user.is_followed) return;
         user.is_followed = true;
-        user.followcount ++;
+        user.followerCount ++;
       };
 
       const unfollow = () => {
         if (!user.is_followed) return;
         user.is_followed = false;
-        user.followcount --;
+        user.followerCount --;
       };
 
       const post_a_post = (content) => {
         posts.count++;
         posts.posts.unshift({
           id: posts.count,
-          userId: 1,
+          userId: userId,
           content: content,
         })
       };
 
+      const delete_a_post = post_id => {
+        posts.posts = posts.posts.filter(post => post.id != post_id);
+        posts.count = posts.posts.length;  // posts.count-- ?
+      }
+
+      const is_me = computed(() => userId === store.state.user.id);  // computed内置一个操作，返回操作结果
+
       return {
         user,
         posts,
+        is_me,
         follow,
         unfollow,
         post_a_post,
+        delete_a_post,
       }
     }
 }

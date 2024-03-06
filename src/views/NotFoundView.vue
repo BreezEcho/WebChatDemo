@@ -1,7 +1,7 @@
 <template>
     <ContentBase>
-    <img alt="Vue logo" src="../assets/logo.png">
-  </ContentBase>
+      404NotFound
+    </ContentBase>
 </template>
 
 <script>

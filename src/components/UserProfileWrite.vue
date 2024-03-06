@@ -11,14 +11,33 @@
 
 <script>
 import { ref } from 'vue';
+import $ from 'jquery';
+import { useStore } from 'vuex';
 
 export default {
     name: 'UserProfileWrite',
     setup(props, context) {
         let content = ref('');
+        const store = useStore();
+
+        // 先更新后端，再更新前端
         const post_a_post = () => {
-            context.emit('post_a_post', content.value);
-            content.value="";
+            $.ajax({
+                url: "https://app165.acapp.acwing.com.cn/myspace/post/",
+                type: "POST",
+                data: {
+                    content: content.value,  // 注意value
+                },
+                headers: {
+                    'Authorization': "Bearer " + store.state.user.access,
+                },
+                success(resp) {
+                    if (resp.result === "success") {  // 尽量用三等
+                        context.emit('post_a_post', content.value);
+                        content.value="";
+                    }
+                }
+            })
         };
 
         return {
@@ -29,4 +48,8 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+button {
+    margin-top: 10px
+}
+</style>
